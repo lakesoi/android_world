@@ -1,16 +1,13 @@
-import json
-import time
-import sys
-
 from android_world.agents import base_agent
 from android_world.env import adb_utils
 from android_world.env import interface
 from android_world.utils import file_utils
+from android_world.env import env_launcher
+import json
+import time
 
 
 class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
-    """Agent that delegates execution to an external Android process via adb."""
-
     BROADCAST_ACTION = "com.example.intent.TRIGGER_WORLD_STEP_REASONING"
     BROADCAST_RECEIVER = (
         "com.example.iotcore/com.example.adbinterface.receiver.WorldStepReasoningReceiver"
@@ -62,32 +59,30 @@ class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
         return base_agent.AgentInteractionResult(done, step_data)
 
 
-# android_world/agents/adb_broadcast_agent.py 중간 이후에 추가
-import argparse
-from android_world.env import env_launcher
+# =====================
+# 👇 여기가 직접 실행 부분
+# =====================
 
-def _run(goal: str, timeout: float, adb_path: str | None, console_port: int) -> None:
+def main():
+    # ⬇️ 직접 설정값 입력
+    GOAL = "와이파이 설정 열어줘"
+    TIMEOUT = 30.0
+    ADB_PATH = None         # 기본 adb 사용
+    CONSOLE_PORT = 5554     # 에뮬레이터 포트
+
     env = env_launcher.load_and_setup_env(
-        console_port=console_port,
+        console_port=CONSOLE_PORT,
         emulator_setup=False,
-        adb_path=adb_path,
+        adb_path=ADB_PATH,
     )
     env.reset(go_home=True)
-    agent = AdbBroadcastAgent(env, timeout=timeout)
 
-    result = agent.step(goal)
+    agent = AdbBroadcastAgent(env, timeout=TIMEOUT)
+    result = agent.step(GOAL)
     print("Result:", result.data.get("result"))
+
     env.close()
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--goal", required=True, help="보낼 목표 문장")
-    parser.add_argument("--timeout", type=float, default=30.0, help="결과 대기 시간(초)")
-    parser.add_argument("--adb_path", default=None, help="adb 실행 파일 경로")
-    parser.add_argument("--console_port", type=int, default=5554, help="에뮬레이터 콘솔 포트")
-    args = parser.parse_args()
-    _run(args.goal, args.timeout, args.adb_path, args.console_port)
 
 if __name__ == "__main__":
     main()
-
