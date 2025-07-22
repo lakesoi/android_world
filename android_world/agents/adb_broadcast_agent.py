@@ -62,23 +62,32 @@ class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
         return base_agent.AgentInteractionResult(done, step_data)
 
 
-# === Main function for standalone execution ===
+# android_world/agents/adb_broadcast_agent.py 중간 이후에 추가
+import argparse
+from android_world.env import env_launcher
+
+def _run(goal: str, timeout: float, adb_path: str | None, console_port: int) -> None:
+    env = env_launcher.load_and_setup_env(
+        console_port=console_port,
+        emulator_setup=False,
+        adb_path=adb_path,
+    )
+    env.reset(go_home=True)
+    agent = AdbBroadcastAgent(env, timeout=timeout)
+
+    result = agent.step(goal)
+    print("Result:", result.data.get("result"))
+    env.close()
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--goal", required=True, help="보낼 목표 문장")
+    parser.add_argument("--timeout", type=float, default=30.0, help="결과 대기 시간(초)")
+    parser.add_argument("--adb_path", default=None, help="adb 실행 파일 경로")
+    parser.add_argument("--console_port", type=int, default=5554, help="에뮬레이터 콘솔 포트")
+    args = parser.parse_args()
+    _run(args.goal, args.timeout, args.adb_path, args.console_port)
+
 if __name__ == "__main__":
-    from android_world.env.adb_env import AdbAsyncEnv
+    main()
 
-    # 사용자가 명령행 인자로 goal을 넘길 수 있도록 처리
-    if len(sys.argv) < 2:
-        print("Usage: python adb_broadcast_agent.py '<GOAL_STRING>'")
-        sys.exit(1)
-
-    goal_input = sys.argv[1]
-
-    # 기본 ADB 환경 생성
-    env = AdbAsyncEnv()  # 기본적으로 연결된 device 사용
-    agent = AdbBroadcastAgent(env)
-
-    print(f"[Agent] Sending goal: {goal_input}")
-    result = agent.step(goal_input)
-
-    print("[Agent] Finished. Result:")
-    print(json.dumps(result.step_data, indent=2, ensure_ascii=False))
