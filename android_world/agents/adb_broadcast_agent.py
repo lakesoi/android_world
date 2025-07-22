@@ -1,5 +1,6 @@
 import json
 import time
+import sys
 
 from android_world.agents import base_agent
 from android_world.env import adb_utils
@@ -48,7 +49,7 @@ class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
                     ) as local_file:
                         with open(local_file, "r", encoding="utf-8") as f:
                             return json.load(f)
-                except Exception as e:  # pylint: disable=broad-except
+                except Exception as e:
                     return {"error": str(e)}
             time.sleep(1.0)
         return None
@@ -59,3 +60,25 @@ class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
         done = result is not None
         step_data = {"result": result}
         return base_agent.AgentInteractionResult(done, step_data)
+
+
+# === Main function for standalone execution ===
+if __name__ == "__main__":
+    from android_world.env.adb_env import AdbAsyncEnv
+
+    # 사용자가 명령행 인자로 goal을 넘길 수 있도록 처리
+    if len(sys.argv) < 2:
+        print("Usage: python adb_broadcast_agent.py '<GOAL_STRING>'")
+        sys.exit(1)
+
+    goal_input = sys.argv[1]
+
+    # 기본 ADB 환경 생성
+    env = AdbAsyncEnv()  # 기본적으로 연결된 device 사용
+    agent = AdbBroadcastAgent(env)
+
+    print(f"[Agent] Sending goal: {goal_input}")
+    result = agent.step(goal_input)
+
+    print("[Agent] Finished. Result:")
+    print(json.dumps(result.step_data, indent=2, ensure_ascii=False))
