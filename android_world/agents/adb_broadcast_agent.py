@@ -10,13 +10,13 @@ from android_world.utils import file_utils
 class AdbBroadcastAgent(base_agent.EnvironmentInteractingAgent):
     """Agent that delegates execution to an external Android process via adb."""
 
-    BROADCAST_ACTION = "com.example.AGENT_GOAL"
+    BROADCAST_ACTION = "com.example.intent.TRIGGER_WORLD_STEP_REASONING"
     BROADCAST_RECEIVER = (
-        "com.example.iotcore/com.example.adbinterface.receiver.AdbEventReceiver"
+        "com.example.iotcore/com.example.adbinterface.receiver.WorldStepReasoningReceiver"
     )
     LOG_TAG = "AgentResult"
     RESULT_REMOTE_PATH = (
-        "/sdcard/Android/data/com.example.iotcore/files/action_result.json"
+        "/storage/emulated/0/Documents/NodeInfoResponse/action_result.json"
     )
 
     def __init__(self, env: interface.AsyncEnv, timeout: float = 30.0):
